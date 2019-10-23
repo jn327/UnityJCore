@@ -22,9 +22,8 @@ public class DebugManager : MonoBehaviour
 
 
     private List<DebugLogEvent> _logs = new List<DebugLogEvent>();
+     private int _logsLength = 500; //limit the amount of logs, they should not be being spammed.
     private Vector2 _logScrollPosition = Vector2.zero;
-    private int _selectedLogIndex = 0;
-    private Vector2 _selectedLogScrollPosition = Vector2.zero;
     private List<DebugLogEvent> _recentLogs = new List<DebugLogEvent>();
     private int _maxRecentLogs = 3;
     private List<DebugLogEvent> _logsAddedThisFrame = new List<DebugLogEvent>();
@@ -88,25 +87,24 @@ public class DebugManager : MonoBehaviour
         get { return _currentFPS; }
     }
 
-    public void addLogEvent( string message, Color color )
+    public static void addLogEvent( string message, Color color )
     {
         DebugLogEvent newLog = new DebugLogEvent(message, color);
-        addLogEvent(newLog);
+        GameManager.Instance.debugManager.addLogEvent(newLog);
     }
 
-    public void addLogEvent( string message )
+    public static void addLogEvent( string message )
     {
         DebugLogEvent newLog = new DebugLogEvent(message, Color.gray);
-        addLogEvent(newLog);
+        GameManager.Instance.debugManager.addLogEvent(newLog);
     }
 
     private void addLogEvent( DebugLogEvent logEvent )
     {
         _logs.Add(logEvent);
-
-        if (_selectedLogIndex == _logs.Count - 2)
+        while (_logs.Count > _logsLength)
         {
-            _selectedLogIndex++;
+            _logs.RemoveAt(0);
         }
 
         _recentLogs.Add(logEvent);
@@ -146,7 +144,6 @@ public class DebugManager : MonoBehaviour
 
     public void clearLog( )
     {
-        _selectedLogIndex = 0;
         while (_logs.Count > 0)
         {
             _logs.RemoveAt(0);
@@ -159,6 +156,8 @@ public class DebugManager : MonoBehaviour
 
     private void OnGUI()
     {
+        Event m_Event = Event.current;
+
         float paddingL = _paddingH * Screen.width;
         float paddingT = _paddingV * Screen.height;
         Rect screenRect = new Rect(paddingL, paddingT, Screen.width - (paddingL * 2), Screen.height - (paddingT * 2));
@@ -167,6 +166,10 @@ public class DebugManager : MonoBehaviour
         itemRect.height = 22;
 
         GUI.color = _defaultTextColor;
+        //TODO: link this up to game manager
+        debugOptions.showFPS = GUI.Toggle(itemRect, debugOptions.showFPS, debugOptions.showFPS ? "Pause" : "Unpause");
+        itemRect.y += itemRect.height + _debugUISpacing;
+
         debugOptions.showFPS = GUI.Toggle(itemRect, debugOptions.showFPS, "Show fps");
         
         itemRect.x += itemRect.width + _debugUISpacing;
@@ -233,63 +236,25 @@ public class DebugManager : MonoBehaviour
             int endIndex = Mathf.Min(startIndex + Mathf.CeilToInt(windowRect.width/(rect.width + spacing)) + 1, _logs.Count);
             
             Color backgroundColor = GUI.backgroundColor;
+            int hoverIndex = -1;
             for (int i = startIndex; i < endIndex; i++)
             {
                 rect.x = i * (rect.width + spacing);
 
-                GUI.backgroundColor = _logs[i].color;
-                if (GUI.Button(rect, "", GUIEx.textureStyle))
-                {
-                    _selectedLogIndex = i;
-                }
+                GUIEx.DrawRect(rect, _logs[i].color );
                 
                 GUI.DrawTexture(rect, _logs[i].screenshot, ScaleMode.ScaleToFit, true);
 
-                if (_selectedLogIndex == i)
+                if (rect.Contains(m_Event.mousePosition))
                 {
-                    GUIEx.DrawRect( new Rect(rect.x, rect.y, rect.width, 2), Color.white );
-                    GUIEx.DrawRect( new Rect(rect.x, rect.y, 2, rect.height), Color.white );
-                    GUIEx.DrawRect( new Rect(rect.x + rect.width - 2, rect.y, 2, rect.height), Color.white );
-                    GUIEx.DrawRect( new Rect(rect.x, rect.y + rect.height - 2, rect.width, 2), Color.white );
+                    hoverIndex = i;
                 }
             }
-            GUI.backgroundColor = backgroundColor;
 
             // End the scroll view that we began above.
             GUI.EndScrollView();
 
-            itemRect.y += windowRect.height + _debugUISpacing; 
-
-            //selected log
-            if (_logs.Count > 0)
-            {
-                DebugLogEvent selLogEvent = _logs[_selectedLogIndex];
-
-                Rect selectedLogWindowRect = new Rect(itemRect.x, itemRect.y, 200, 150);
-                Rect selectedLogContentRect = new Rect(0, 0, 200 - _debugScrollBarHeight, 50 + _debugUISpacing + 180 + _debugUISpacing + 250);
-                _selectedLogScrollPosition = GUI.BeginScrollView(selectedLogWindowRect, _selectedLogScrollPosition, selectedLogContentRect);
-                
-                GUI.color = Color.white;
-                rect.x = 0; 
-                rect.y = 0;
-
-                rect.width = 180;
-                rect.height = 40;
-                GUI.color = _defaultTextColor;
-                GUI.Label(rect, selLogEvent.time +": " +selLogEvent.message);
-                rect.y += rect.height + _debugUISpacing; 
-                
-                rect.height = 180;
-                GUI.DrawTexture(rect, selLogEvent.screenshot, ScaleMode.ScaleToFit, true);
-                rect.y += rect.height + _debugUISpacing; 
-
-                rect.height = 250;
-                GUI.Label(rect, selLogEvent.stackTrace);
-                rect.y += rect.height + _debugUISpacing; 
-
-                GUI.EndScrollView();
-                itemRect.y += selectedLogWindowRect.height + _debugUISpacing; 
-            }
+            itemRect.y += windowRect.height + _debugUISpacing;
             
             //recent logs
             itemRect.width = 200;
@@ -312,6 +277,17 @@ public class DebugManager : MonoBehaviour
             }
             GUI.color = _defaultTextColor;
 
+            //hovering over the logs
+            if (hoverIndex > -1)
+            {
+                Rect hoverRect = new Rect(m_Event.mousePosition.x, m_Event.mousePosition.y, screenRect.width * 0.66f, screenRect.height * 0.66f);
+
+                GUIEx.DrawRect( new Rect(hoverRect.x-2, hoverRect.y-2, hoverRect.width+4, hoverRect.height+4), _logs[hoverIndex].color );
+
+                GUI.DrawTexture(hoverRect, _logs[hoverIndex].screenshot, ScaleMode.ScaleToFit, true);
+
+                //TODO: Add info like the log text and call stack
+            }
         }
     }
 }
