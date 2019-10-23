@@ -167,7 +167,7 @@ public class DebugManager : MonoBehaviour
 
         GUI.color = _defaultTextColor;
         //TODO: link this up to game manager
-        debugOptions.showFPS = GUI.Toggle(itemRect, debugOptions.showFPS, debugOptions.showFPS ? "Pause" : "Unpause");
+        debugOptions.showFPS = GUI.Toggle(itemRect, debugOptions.showFPS, debugOptions.showFPS ? "Pause" : "Un-Pause");
         itemRect.y += itemRect.height + _debugUISpacing;
 
         debugOptions.showFPS = GUI.Toggle(itemRect, debugOptions.showFPS, "Show fps");
@@ -280,13 +280,33 @@ public class DebugManager : MonoBehaviour
             //hovering over the logs
             if (hoverIndex > -1)
             {
-                Rect hoverRect = new Rect(m_Event.mousePosition.x, m_Event.mousePosition.y, screenRect.width * 0.66f, screenRect.height * 0.66f);
+                Rect hoverRect = new Rect(m_Event.mousePosition.x, m_Event.mousePosition.y, screenRect.width * 0.75f, screenRect.height * 0.75f);
 
-                GUIEx.DrawRect( new Rect(hoverRect.x-2, hoverRect.y-2, hoverRect.width+4, hoverRect.height+4), _logs[hoverIndex].color );
+                GUIEx.DrawRect( hoverRect, _logs[hoverIndex].color );
 
+                float areaW = 250;
+                float hoverRectW = hoverRect.width;
+                hoverRect.x += 2;
+                hoverRect.y += 2;
+                hoverRect.height -= 4;
+                hoverRect.width = Mathf.Max(hoverRect.width - (areaW + 4), 0);
                 GUI.DrawTexture(hoverRect, _logs[hoverIndex].screenshot, ScaleMode.ScaleToFit, true);
 
-                //TODO: Add info like the log text and call stack
+                hoverRect.x -= 2;
+                hoverRect.y -= 2;
+                hoverRect.height += 4;
+                hoverRect.x = hoverRect.x + Mathf.Max(hoverRectW-areaW, 0);
+                hoverRect.width = areaW;
+                hoverRect.height = Mathf.Min(500, hoverRect.height);
+                Color bgColor = new Color(0, 0, 0, 0.5f);
+                GUIEx.DrawRect( hoverRect, bgColor );
+
+                hoverRect.height = 50;
+                GUI.Label(hoverRect, _logs[hoverIndex].time +": " +_logs[hoverIndex].message);
+                hoverRect.y += hoverRect.height;
+
+                hoverRect.height = 600;
+                GUI.Label(hoverRect, _logs[hoverIndex].stackTrace);
             }
         }
     }
