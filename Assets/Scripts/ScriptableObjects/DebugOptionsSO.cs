@@ -6,4 +6,5 @@ using UnityEngine;
 public class DebugOptionsSO : ScriptableObject
 {
     public bool showFPS = true;
+    public bool showLog = true;
 }
