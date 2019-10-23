@@ -2,8 +2,8 @@
 
 public static class GUIEx 
 {
-	private static readonly Texture2D backgroundTexture = Texture2D.whiteTexture;
-    private static readonly GUIStyle textureStyle = new GUIStyle {normal = new GUIStyleState { background = backgroundTexture } };
+	public static readonly Texture2D backgroundTexture = Texture2D.whiteTexture;
+    public static readonly GUIStyle textureStyle = new GUIStyle {normal = new GUIStyleState { background = backgroundTexture } };
 
 	public static void DrawRect(Rect position, Color color, GUIContent content = null)
     {
