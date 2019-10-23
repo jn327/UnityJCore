@@ -18,7 +18,7 @@ public class DebugManager : MonoBehaviour
     private int _targetFPS = 60;
     private List<int> _fpsLog = new List<int>();
     private int _fpsLogLength = 30;
-    private Vector2 _fpsLogSize = new Vector2(200, 50);
+    private Vector2 _fpsLogSize = new Vector2(200, 30);
 
 
     private List<DebugLogEvent> _logs = new List<DebugLogEvent>();
@@ -27,6 +27,7 @@ public class DebugManager : MonoBehaviour
     private Vector2 _selectedLogScrollPosition = Vector2.zero;
     private List<DebugLogEvent> _recentLogs = new List<DebugLogEvent>();
     private int _maxRecentLogs = 3;
+    private List<DebugLogEvent> _logsAddedThisFrame = new List<DebugLogEvent>();
 
     [System.Serializable]
     public struct DebugLogEvent 
@@ -35,26 +36,24 @@ public class DebugManager : MonoBehaviour
         public float time { get { return _time; } }
         private string _message;
         public string message { get { return _message; } }
-        private UnityEngine.Color _color;
-        public UnityEngine.Color color { get { return _color; } }
+        private Color _color;
+        public Color color { get { return _color; } }
         private string _stackTrace;
         public string stackTrace {get { return _stackTrace; } }
-        private UnityEngine.Texture2D _screenshot;
-        public UnityEngine.Texture2D screenshot { get { return _screenshot; } }
+        public Texture2D _screenshot;
+        public Texture2D screenshot {get { return _screenshot; } }
 
         // =======================
         //		Constructor
         // =======================
-        public DebugLogEvent( string message, UnityEngine.Color color )
+        public DebugLogEvent( string message, Color color )
         {
             _time		= UnityEngine.Time.time;
-            _stackTrace	= UnityEngine.StackTraceUtility.ExtractStackTrace ();
+            _stackTrace	= StackTraceUtility.ExtractStackTrace ();
             _message	= message;
             _color		= color;
 
-            _screenshot	= UnityEngine.ScreenCapture.CaptureScreenshotAsTexture();
-
-            UnityEngine.Debug.Log("<color=#"+UnityEngine.ColorUtility.ToHtmlStringRGB(_color)+">" +_time +": " +_message+ "</color>");
+            _screenshot = new Texture2D(Screen.width, Screen.height, TextureFormat.RGB24, false);
         }
     }
 
@@ -115,6 +114,34 @@ public class DebugManager : MonoBehaviour
         {
             _recentLogs.RemoveAt(0);
         }
+
+        Debug.Log("<color=#"+ColorUtility.ToHtmlStringRGB(logEvent.color)+">" +logEvent.time +": " +logEvent.message+ "</color>");
+
+        _logsAddedThisFrame.Add(logEvent);
+        //if we've already added a log this frame then we only need to start the coroutine once
+        if (_logsAddedThisFrame.Count <= 1)
+        {
+            StartCoroutine(LogScreen());
+        }
+    }
+
+    // Will be called from camera after regular rendering is done.
+    IEnumerator LogScreen()
+    {
+        // We should only read the screen buffer after rendering is complete
+        yield return new WaitForEndOfFrame();
+
+        DebugLogEvent logEvent;
+        while (_logsAddedThisFrame.Count > 0)
+        {
+            logEvent = _logsAddedThisFrame[0];
+            
+            //Read the pixels in the Rect starting at 0,0 and ending at the screen's width and height
+            logEvent.screenshot.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
+            logEvent.screenshot.Apply();
+
+            _logsAddedThisFrame.RemoveAt(0);
+        }
     }
 
     public void clearLog( )
@@ -153,7 +180,7 @@ public class DebugManager : MonoBehaviour
             GUI.color = _goodBadColorGradient.Evaluate(fpsNormal);
             GUI.Label(itemRect, _currentFPS.ToString() + " FPS");
             itemRect.y += itemRect.height + _debugUISpacing;
-
+            
             Color rectColor;
             int currFPS;
             Rect rect = new Rect(itemRect.x, itemRect.y, _fpsLogSize.x / _fpsLog.Count, 1);
@@ -239,26 +266,24 @@ public class DebugManager : MonoBehaviour
                 DebugLogEvent selLogEvent = _logs[_selectedLogIndex];
 
                 Rect selectedLogWindowRect = new Rect(itemRect.x, itemRect.y, 200, 150);
-                Rect selectedLogContentRect = new Rect(0, 0, 200 - _debugScrollBarHeight, 300 + 70 + _debugUISpacing + _debugScrollBarHeight);
+                Rect selectedLogContentRect = new Rect(0, 0, 200 - _debugScrollBarHeight, 50 + _debugUISpacing + 180 + _debugUISpacing + 250);
                 _selectedLogScrollPosition = GUI.BeginScrollView(selectedLogWindowRect, _selectedLogScrollPosition, selectedLogContentRect);
                 
                 GUI.color = Color.white;
-                rect.width = 70;
-                rect.height = 70;
                 rect.x = 0; 
                 rect.y = 0;
 
-                GUI.DrawTexture(rect, selLogEvent.screenshot, ScaleMode.ScaleToFit, true);
-                rect.x += rect.width + _debugUISpacing; 
-                rect.width = 100;
-
+                rect.width = 180;
+                rect.height = 40;
                 GUI.color = _defaultTextColor;
                 GUI.Label(rect, selLogEvent.time +": " +selLogEvent.message);
                 rect.y += rect.height + _debugUISpacing; 
-                rect.x = screenRect.x;
+                
+                rect.height = 180;
+                GUI.DrawTexture(rect, selLogEvent.screenshot, ScaleMode.ScaleToFit, true);
+                rect.y += rect.height + _debugUISpacing; 
 
-                rect.width = 160;
-                rect.height = 200;
+                rect.height = 250;
                 GUI.Label(rect, selLogEvent.stackTrace);
                 rect.y += rect.height + _debugUISpacing; 
 
