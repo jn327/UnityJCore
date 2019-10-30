@@ -5,8 +5,12 @@ using UnityEngine;
 [System.Serializable]
 public class WindNoiseLayer
 {
+    //Disable the compilers 'its never used warning' because this is just for the inspector.
     [SerializeField]
-    protected string _name; //just for the inspector.
+    #pragma warning disable 0414
+    private string _name = "";
+    #pragma warning restore 0414
+    
     private enum NOISE_TYPE {SIMPLEX, PERLIN, NONE, RANDOM, X, Y, SINX, SINY, COSX, COSY };
     [SerializeField]
     private NOISE_TYPE _type = default;
