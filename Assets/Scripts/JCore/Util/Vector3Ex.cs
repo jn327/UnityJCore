@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class Vector3Ex
+public static class Vector3Ex
 {
     public static Vector3 Lerp3( Vector3 a, Vector3 b, Vector3 t )
     {

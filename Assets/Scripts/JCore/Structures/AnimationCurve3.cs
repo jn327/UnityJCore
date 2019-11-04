@@ -6,6 +6,8 @@ public class AnimationCurve3
     public AnimationCurve x;
 	public AnimationCurve y;
 	public AnimationCurve z;
+
+    // ===== CONSTRUCTOR =====
     public AnimationCurve3(AnimationCurve _x, AnimationCurve _y, AnimationCurve _z)
     {
         x = _x;
@@ -13,6 +15,7 @@ public class AnimationCurve3
         z = _z;
     }
 
+    // ===== STATIC GETTERS =====
     public static AnimationCurve3 linear 
     { 
         get
@@ -39,6 +42,7 @@ public class AnimationCurve3
         }
     }
 
+    // ===== METHODS =====
     public Vector3 Evaluate3( Vector3 t )
     {
         return new Vector3

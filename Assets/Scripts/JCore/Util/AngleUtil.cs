@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class AngleUtil
+public static class AngleUtil
 {
     public static float ClampAngle(float angle, float min, float max)
     {
