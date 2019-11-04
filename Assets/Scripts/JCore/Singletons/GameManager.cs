@@ -6,16 +6,18 @@ using StateMachine;
 public class GameManager : MonoSingleton<GameManager>
 {
     public GameOptionsSO gameOptions;
+    public DebugOptionsSO debugOptions;
+
     public StateMachine<GameManager> stateMachine;
 
-    private DebugManager _debugManager;
-    public DebugManager debugManager
+    private DebugLog _debugLog;
+    public DebugLog debugLog
     {
-        get { return _debugManager; }
+        get { return _debugLog; }
     }
 
     void Awake()
     {
-        _debugManager = GetComponent<DebugManager>();
+        _debugLog = gameObject.AddComponent<DebugLog>();
     }
 }

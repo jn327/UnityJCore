@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DebugManager : MonoBehaviour
+public class DebugLog : MonoBehaviour
 {
-    public DebugOptionsSO debugOptions;
-
     private Gradient _goodBadColorGradient = new Gradient();
     private Color _defaultTextColor = Color.white;
     private float _debugUISpacing = 4;
@@ -19,7 +17,6 @@ public class DebugManager : MonoBehaviour
     private List<int> _fpsLog = new List<int>();
     private int _fpsLogLength = 30;
     private Vector2 _fpsLogSize = new Vector2(200, 30);
-
 
     private List<DebugLogEvent> _logs = new List<DebugLogEvent>();
      private int _logsLength = 500; //limit the amount of logs, they should not be being spammed.
@@ -87,16 +84,16 @@ public class DebugManager : MonoBehaviour
         get { return _currentFPS; }
     }
 
-    public static void addLogEvent( string message, Color color )
+    public static void add( string message, Color color )
     {
         DebugLogEvent newLog = new DebugLogEvent(message, color);
-        GameManager.Instance.debugManager.addLogEvent(newLog);
+        GameManager.Instance.debugLog.addLogEvent(newLog);
     }
 
-    public static void addLogEvent( string message )
+    public static void add( string message )
     {
         DebugLogEvent newLog = new DebugLogEvent(message, Color.gray);
-        GameManager.Instance.debugManager.addLogEvent(newLog);
+        GameManager.Instance.debugLog.addLogEvent(newLog);
     }
 
     private void addLogEvent( DebugLogEvent logEvent )
@@ -166,6 +163,7 @@ public class DebugManager : MonoBehaviour
         itemRect.height = 22;
 
         GUI.color = _defaultTextColor;
+        DebugOptionsSO debugOptions = GameManager.Instance.debugOptions;
         //TODO: link this up to game manager
         debugOptions.showFPS = GUI.Toggle(itemRect, debugOptions.showFPS, debugOptions.showFPS ? "Pause" : "Un-Pause");
         itemRect.y += itemRect.height + _debugUISpacing;
@@ -212,7 +210,7 @@ public class DebugManager : MonoBehaviour
             itemRect.width = 80;
             if (GUI.Button(itemRect, "Add to log"))
             {
-                addLogEvent("Manual click log", Color.green);
+                add("Manual click log", Color.green);
             }
             itemRect.x += itemRect.width + _debugUISpacing;
             itemRect.width = 70;
