@@ -11,14 +11,10 @@ public class RBParticleEmission : MonoBehaviour
     private ParticleSystem _particleSystem;
 
     [SerializeField]
-    private float _minVelocity = 0f;
-    [SerializeField]
-    private float _maxVelocity = 10.0f;
+    private MinMaxFloat _velocityLimits = new MinMaxFloat( 0, 10.0f );
 
     [SerializeField]
-    private float _minEmission = 0f;
-    [SerializeField]
-    private float _maxEmission = 10.0f;
+    private MinMaxFloat _emissionRange = new MinMaxFloat( 0, 10.0f );
 
     [SerializeField]
     private AnimationCurve _emissionCurve = AnimationCurve.Linear(0, 0, 1, 1);
@@ -40,10 +36,10 @@ public class RBParticleEmission : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (_rb.velocity.magnitude > _minVelocity)
+        if (_rb.velocity.magnitude > _velocityLimits.min)
         {
-            float velocityN = Mathf.Min(Mathf.InverseLerp(_minVelocity, _maxVelocity, _rb.velocity.magnitude), 1.0f);
-            float emission = Mathf.Lerp( _minEmission, _maxEmission, _emissionCurve.Evaluate(velocityN));
+            float velocityN = Mathf.Clamp( _velocityLimits.InverseLerp(_rb.velocity.magnitude), 0, 1 );
+            float emission = _emissionRange.Lerp(velocityN);
 
             _particleSystem.Emit((int)emission);
         }

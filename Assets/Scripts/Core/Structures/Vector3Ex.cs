@@ -7,7 +7,7 @@ public class Vector3Ex
         return new Vector3
         (
             Mathf.Lerp(a.x, b.x, t.x),
-		    Mathf.Lerp(a.y, b.y, t.x),
+		    Mathf.Lerp(a.y, b.y, t.y),
 		    Mathf.Lerp(a.z, b.z, t.z)
         );
     }
@@ -29,6 +29,26 @@ public class Vector3Ex
             Mathf.InverseLerp(a.x, b.x, value.x),
 			Mathf.InverseLerp(a.y, b.y, value.y),
 			Mathf.InverseLerp(a.z, b.z, value.z)
+        );
+    }
+
+    public static Vector3 Multiply3(Vector3 a, Vector3 b)
+    {
+        return new Vector3
+        (
+            a.x * b.x,
+			a.y * b.y,
+			a.z * b.z
+        );
+    }
+
+    public static Vector3 Clamp3(Vector3 value, Vector3 min, Vector3 max )
+    {
+        return new Vector3
+        (
+            Mathf.Clamp(value.x, min.x, max.x),
+			Mathf.Clamp(value.y, min.y, max.y),
+			Mathf.Clamp(value.z, min.z, max.z)
         );
     }
 

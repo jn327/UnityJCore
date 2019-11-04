@@ -5,22 +5,21 @@ using UnityEngine;
 [System.Serializable]
 public class WindNoiseLayer
 {
-    //Disable the compilers 'its never used warning' because this is just for the inspector.
-    [SerializeField]
+    [SerializeField, HideInInspector]
     #pragma warning disable 0414
-    private string _name = "";
+    private string name = "";
     #pragma warning restore 0414
     
     private enum NOISE_TYPE {SIMPLEX, PERLIN, NONE, RANDOM, X, Y, SINX, SINY, COSX, COSY };
     [SerializeField]
-    private NOISE_TYPE _type = default;
+    private NOISE_TYPE _type = NOISE_TYPE.SIMPLEX;
 
     [SerializeField]
     private AnimationCurve _curve = default;
 
     public enum OPERATION_TYPE {ADDITION, SUBTRACTION, MULTIPLICATION, DIVISION };
     [SerializeField]
-	private OPERATION_TYPE _operationType = default;
+	private OPERATION_TYPE _operationType = OPERATION_TYPE.ADDITION;
 
     [SerializeField]
     private bool _bEnabled = true;
@@ -32,7 +31,7 @@ public class WindNoiseLayer
     [SerializeField]
     [Range(0,1)]
     private float _weighting = 1.0f;
-    
+
     //initial position offset, so we don't always get our noise from the same location
     private Vector2 _initialOffset;
     

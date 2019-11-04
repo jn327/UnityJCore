@@ -1,49 +1,51 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public struct WindValue
-{
-	private Vector2 _direction;
-	public Vector2 direction {get { return _direction; } }
-	private float _strength;
-	public float strength {get { return _strength; } }
-
-    public WindValue(Vector2 direction, float strength)
-    {
-        _direction = direction;
-        _strength = strength;
-    }
-}
-
-[System.Serializable]
-public struct ParticleLayer
-{
-	public ParticleLayer(ParticleSystem _particleSystem, float _strength = 2, float _dampen = 0.5f)
-    {
-        particleSystem = _particleSystem;
-        strength = _strength;
-		dampen = _dampen;
-    }
-
-	public ParticleSystem particleSystem;
-	public float strength;
-	[Range(0,1)]
-	public float dampen;
-}
 
 public class WindController : MonoBehaviour 
 {
+	public struct WindValue
+	{
+		private Vector2 _direction;
+		public Vector2 direction {get { return _direction; } }
+		private float _strength;
+		public float strength {get { return _strength; } }
+
+		public WindValue(Vector2 direction, float strength)
+		{
+			_direction = direction;
+			_strength = strength;
+		}
+	}
+
+	[System.Serializable]
+	protected struct ParticleLayer
+	{
+		public ParticleLayer(ParticleSystem _particleSystem, float _strength = 2, float _dampen = 0.5f)
+		{
+			particleSystem = _particleSystem;
+			strength = _strength;
+			dampen = _dampen;
+		}
+
+		public ParticleSystem particleSystem;
+		public float strength;
+		[Range(0,1)]
+		public float dampen;
+	}
+
 	[SerializeField]
 	private LayerMask _layersToAffect = default;
 
 	[SerializeField]
 	private float _rbStayForce = 5.0f;
 	
-	[SerializeField]
+	[SerializeField] [EditableHeader(new string[] {"_type", "_scale", "_changeSpeed", "_bEnabled"})]
 	private WindNoiseLayer[] _strengthNoise = default;
 	private float _strVal;
-	[SerializeField]
+	[SerializeField] [EditableHeader(new string[] {"name"})]
 	private WindNoiseLayer[] _angleNoise = default;
+	
 	private float _angleVal;
 	[SerializeField]
 	private float _curlStep = 0.5f;

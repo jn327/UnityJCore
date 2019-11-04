@@ -38,4 +38,14 @@ public class AnimationCurve3
             );
         }
     }
+
+    public Vector3 Evaluate3( Vector3 t )
+    {
+        return new Vector3
+        (
+            x.Evaluate(t.x),
+			y.Evaluate(t.y),
+			z.Evaluate(t.z)
+        );
+    }
 }

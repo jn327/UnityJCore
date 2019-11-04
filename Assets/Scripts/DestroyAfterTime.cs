@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class DestroyAfterTime : MonoBehaviour 
 {
-	private float _lifetime = 2.0f;
+	[SerializeField]
+    private MinMaxFloat _lifetime = new MinMaxFloat( 0.5f, 1.0f );
 
 	void Start () 
 	{
@@ -13,7 +14,7 @@ public class DestroyAfterTime : MonoBehaviour
 
 	IEnumerator DoDestroy()
 	{
-		yield return new WaitForSeconds(_lifetime);
+		yield return new WaitForSeconds(_lifetime.GetRandom());
 		Destroy(this.gameObject);
 	}
 }

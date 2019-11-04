@@ -1,4 +1,4 @@
 ﻿public interface IWindAffected
 {
-    void onWindUpdate(WindValue windValue);
+    void onWindUpdate(WindController.WindValue windValue);
 }

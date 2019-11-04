@@ -1,12 +1,10 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿﻿using UnityEngine;
 
-public class Spawner : MonoBehaviour
-{
-	public GameObject objectToSpawn;
-	private float _spawnFrequencyMin = 0.5f;
-	private float _spawnFrequencyMax = 1.0f;
+public class Spawner : ObjectPool
+{	
+	[SerializeField]
+    private MinMaxFloat _spawnFrequency = new MinMaxFloat( 0.5f, 1.0f );
+
 	private float _nextSpawnTime = 0;
 
 	// Update is called once per frame
@@ -20,10 +18,10 @@ public class Spawner : MonoBehaviour
 
 	private void doSpawn()
 	{
-		Instantiate(objectToSpawn, transform.position, Quaternion.identity);
+		GameObject obj = getFromPool().gameObject;
+		obj.transform.position = transform.position;
+		obj.transform.rotation = Quaternion.identity;
 
-		_nextSpawnTime = Time.time + Random.Range(_spawnFrequencyMin, _spawnFrequencyMax);
-
-		DebugManager.addLogEvent("Spawning something");
+		_nextSpawnTime = Time.time + _spawnFrequency.GetRandom();
 	}
 }
