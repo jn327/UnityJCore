@@ -52,4 +52,14 @@ public class AnimationCurve3
 			z.Evaluate(t.z)
         );
     }
+
+    public Vector3 Evaluate3Random()
+    {
+        return new Vector3
+        (
+            x.Evaluate(Random.value),
+			y.Evaluate(Random.value),
+			z.Evaluate(Random.value)
+        );
+    }
 }
