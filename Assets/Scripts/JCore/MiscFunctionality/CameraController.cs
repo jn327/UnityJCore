@@ -2,15 +2,12 @@
 
 public class CameraController : MonoBehaviour 
 {
-    //TODO: some easing curves for rotation and zooming.
-    //TODO: option to change which axis we want to consider the forward axis (say we wanted it to be y rather than z)
-    
     //TODO: maybe also rotate to face the same direction at the target's direction (with a bool _copyTargetForwardRotation)
     //TODO: we might also want a collider and if it hits anything then we move out of its way.
     
     // Direction to look in
     private enum DIRECTION {FORWARD, RIGHT, UP, BACKWARD, LEFT, DOWN };
-    [SerializeField]
+    [SerializeField, Tooltip("To change the axis around which the camera will rotate")]
     private DIRECTION _direction = DIRECTION.FORWARD;
     private Vector3 _forwardDir;
     private Vector3 _upDir;
@@ -18,7 +15,7 @@ public class CameraController : MonoBehaviour
     
     // Targeting
     [Header("Targeting")]
-	[SerializeField]
+	[SerializeField, Tooltip("A transform to orbit around and follow\nCan be null, if so it will target the last position of its last target, you can use setTargetPosition to target any position when your target it null.")]
     private Transform _target;
     [SerializeField]
     private Vector3 _targetOffset;
@@ -28,28 +25,33 @@ public class CameraController : MonoBehaviour
     // Orbiting
     [Header("Orbiting")]
     [SerializeField]
-    private Vector2 _rotationSpeed = new Vector2(200.0f, 200.0f);
+    private Vector2MinMaxSet _rotationSpeed = new Vector2MinMaxSet(new Vector2(100.0f, 100.0f), new Vector2(200.0f, 200.0f)); 
+    [SerializeField, Tooltip("This is between the rotation limits so you'll probably want to consider using ^ or V shaped curves so that the rotation speed is faster or slower in the middle respectively.")]
+    private AnimationCurve2 _rotationSpeedEasing = default;
     [SerializeField]
-	private MinMaxFloat _horizontalRotationLimits = new MinMaxFloat(-80, 80);
-    [SerializeField]
-	private MinMaxFloat _verticalRotationLimits = new MinMaxFloat(-80, 80);
+    private Vector2MinMaxSet _rotationLimits = new Vector2MinMaxSet(new Vector2(100.0f, 100.0f), new Vector2(200.0f, 200.0f));
     [SerializeField]
     private float _rotationDampening = 5.0f;
-    //if there is no rotation input return to the return rotation.
-    //make sure the x and y values are within the _horizontalRotationLimits & _verticalRotationLimits respectively.
-    [SerializeField]
+    //if there is no rotation input return to the return rotation, make sure the values are within the _rotationLimits.
+    [SerializeField, Tooltip("If there is no rotation input return to this rotation, will still be within the Rotation Limits.")]
     private Vector2 _returnRotation = new Vector2(0, 0);
-    //make sure the values are lower than rotation speed.
     [SerializeField]
-    private Vector2 _returnRotationSpeed = new Vector2(20.0f, 10.0f);
+    private Vector2MinMaxSet _returnRotationSpeed = new Vector2MinMaxSet(new Vector2(5.0f, 10.0f), new Vector2(20.0f, 40.0f)); 
+    [SerializeField, Tooltip("Distance from the return rotation angle at which to consider the return rotation speed at max, always positive")]
+    private Vector2 _returnRotSpeedDist = new Vector2(60, 60);
+    [SerializeField]
+    private AnimationCurve2 _returnRotationSpeedEasing = default;
 
     private Vector2 _currRotation;
+    private Vector2 _normalizedRotation = Vector2.zero;
     private Quaternion _desiredRotation;
     
     // Zooming
     [Header("Zooming")]
 	[SerializeField]
-    private float _zoomSpeed = 40.0f;
+    private MinMaxFloat _zoomSpeed = new MinMaxFloat(20.0f, 50.0f);
+    [SerializeField]
+    private AnimationCurve _zoomSpeedEasing = default;
     [SerializeField]
 	private MinMaxFloat _distanceLimits = new MinMaxFloat(1.0f, 20.0f);
     [SerializeField]
@@ -57,6 +59,7 @@ public class CameraController : MonoBehaviour
     
     private float _currDistance;
     private float _desiredDistance;
+    private float _targetDistN;
 
     // Input
     private struct InputState
@@ -79,7 +82,10 @@ public class CameraController : MonoBehaviour
     // ===================
     void Start() 
 	{
-		Init();
+        if (isActiveAndEnabled)
+        {
+		    Init();
+        }
 	}
 
     void OnEnable() 
@@ -89,6 +95,9 @@ public class CameraController : MonoBehaviour
 
     public void Init()
     {
+        //set the current distance and rotation so we keep our initial position
+        setDistanceToTarget();
+        
         //figure out the direction to aim in.
         switch( _direction )
         {
@@ -96,53 +105,52 @@ public class CameraController : MonoBehaviour
                 _forwardDir = Vector3.forward;
                 _upDir      = Vector3.right;
                 _rightDir   = Vector3.up;
+                
+                _currRotation.x = AngleUtil.Normalize(transform.eulerAngles.y);
+                _currRotation.y = AngleUtil.Normalize(transform.eulerAngles.x);
                 break;
-            //TODO: setup and test these other directions
             case DIRECTION.RIGHT:
                 _forwardDir = Vector3.right;
                 _upDir      = Vector3.forward;
                 _rightDir   = Vector3.up;
+
+                _currRotation.x = AngleUtil.Normalize(transform.eulerAngles.y);
+                _currRotation.y = AngleUtil.Normalize(transform.eulerAngles.z);
                 break;
             case DIRECTION.UP:
                 _forwardDir = Vector3.up;
                 _upDir      = Vector3.right;
                 _rightDir   = Vector3.forward;
+
+                _currRotation.x = AngleUtil.Normalize(transform.eulerAngles.z);
+                _currRotation.y = AngleUtil.Normalize(transform.eulerAngles.x);
                 break;
             case DIRECTION.BACKWARD:
                 _forwardDir = -Vector3.forward;
                 _upDir      = Vector3.right;
                 _rightDir   = Vector3.up;
+
+                _currRotation.x = AngleUtil.Normalize(transform.eulerAngles.y);
+                _currRotation.y = AngleUtil.Normalize(transform.eulerAngles.x);
                 break;
             case DIRECTION.LEFT:
                 _forwardDir = -Vector3.right;
                 _upDir      = Vector3.forward;
                 _rightDir   = Vector3.up;
+
+                _currRotation.x = AngleUtil.Normalize(transform.eulerAngles.y);
+                _currRotation.y = AngleUtil.Normalize(transform.eulerAngles.z);
                 break;
             case DIRECTION.DOWN:
                 _forwardDir = -Vector3.up;
                 _upDir      = Vector3.right;
                 _rightDir   = Vector3.forward;
+
+                _currRotation.x = AngleUtil.Normalize(transform.eulerAngles.z);
+                _currRotation.y = AngleUtil.Normalize(transform.eulerAngles.x);
                 break;
         }
 
-        //set the current distance and rotation so we keep our initial position
-        setDistanceToTarget();
-        
-        //TODO: figure this shit out with _upDir and _rightDir
-        _currRotation.x = Vector3.Angle(Vector3.right, transform.right);
-        _currRotation.y = Vector3.Angle(Vector3.up, transform.up);
-
-        //TODO: why is this not the other way around????
-        //_currRotation.y = Vector3.Angle(_rightDir, transform.rotation * _rightDir);
-        //_currRotation.x = Vector3.Angle(_upDir, transform.rotation * _upDir);
-
-        //_currRotation.x = Vector3.Angle(_rightDir, Vector3Ex.Multiply3(transform.rotation.eulerAngles, _rightDir));
-        //_currRotation.y = Vector3.Angle(_upDir, Vector3Ex.Multiply3(transform.rotation.eulerAngles, _upDir));
-
-        //_currRotation.x = Vector3Ex.Multiply3(transform.rotation.eulerAngles, _rightDir);
-        //_currRotation.y = Vector3Ex.Multiply3(transform.rotation.eulerAngles, _upDir);
-
-        Debug.Log("Curr rotation is "+_currRotation +", transform rotation is "+transform.rotation.eulerAngles);
     }
 
     // ===================
@@ -240,25 +248,42 @@ public class CameraController : MonoBehaviour
     {
         if (_inputState.rotationEnabled)
         {
-            _currRotation += _inputState.rotation * _rotationSpeed * Time.deltaTime;
+            _normalizedRotation = _rotationLimits.InverseLerp(_currRotation);
+            _normalizedRotation = _rotationSpeedEasing.Evaluate2(_normalizedRotation);
+
+            _currRotation += _inputState.rotation * _rotationSpeed.Lerp(_normalizedRotation) * Time.deltaTime;
         }
         else
         {
-            //return rotation
-            if ( _returnRotationSpeed.x > 0 )
+            // return rotation
+            if (_currRotation != _returnRotation)
             {
-                _currRotation.x = Mathf.Lerp(_currRotation.x, _returnRotation.x, Time.deltaTime * _returnRotationSpeed.x);
-            }
+                if ( (_returnRotationSpeed.min.x > 0 && _returnRotationSpeed.max.x > 0) || (_returnRotationSpeed.min.y > 0 && _returnRotationSpeed.max.y > 0) )
+                {
+                    //how far we are away from the return rotation
+                    _normalizedRotation -= _returnRotation;
+                    _normalizedRotation.x = Mathf.Abs(AngleUtil.ClampAngle(_normalizedRotation.x, -_returnRotSpeedDist.x, _returnRotSpeedDist.x) / _returnRotSpeedDist.x);
+                    _normalizedRotation.y = Mathf.Abs(AngleUtil.ClampAngle(_normalizedRotation.y, -_returnRotSpeedDist.y, _returnRotSpeedDist.y) / _returnRotSpeedDist.y);
 
-            if ( _returnRotationSpeed.y > 0 )
-            {
-                _currRotation.y = Mathf.Lerp(_currRotation.y, _returnRotation.y, Time.deltaTime * _returnRotationSpeed.y);
+                    _normalizedRotation = _returnRotationSpeedEasing.Evaluate2(_normalizedRotation);
+
+                    // now modify the current rotation to move towards the return rotation
+                    if ( _returnRotationSpeed.min.x > 0 && _returnRotationSpeed.max.x > 0 )
+                    {
+                        _currRotation.x = Mathf.Lerp(_currRotation.x, _returnRotation.x, Time.deltaTime * _returnRotationSpeed.getLerpedX(_normalizedRotation.x));
+                    }
+
+                    if ( _returnRotationSpeed.min.y > 0 && _returnRotationSpeed.max.y > 0 )
+                    {
+                        _currRotation.y = Mathf.Lerp(_currRotation.y, _returnRotation.y, Time.deltaTime * _returnRotationSpeed.getLerpedY(_normalizedRotation.y));
+                    }
+                }
             }
         }
 
         // clamp the rotation angles
-        _currRotation.x = AngleUtil.ClampAngle(_currRotation.x, _horizontalRotationLimits.min, _horizontalRotationLimits.max);
-        _currRotation.y = AngleUtil.ClampAngle(_currRotation.y, _verticalRotationLimits.min, _verticalRotationLimits.max);
+        _currRotation.x = AngleUtil.ClampAngle(_currRotation.x, _rotationLimits.min.x, _rotationLimits.max.x);
+        _currRotation.y = AngleUtil.ClampAngle(_currRotation.y, _rotationLimits.min.y, _rotationLimits.max.y);
         
         // set camera rotation, smoothed
         _desiredRotation = Quaternion.Euler((_currRotation.y * _upDir) + (_currRotation.x * _rightDir));
@@ -270,11 +295,18 @@ public class CameraController : MonoBehaviour
     void updatePosition()
     {
         // set zoom amount, smoothed
-        _desiredDistance += _inputState.zoom * Time.deltaTime * _zoomSpeed * _desiredDistance;
+        // get the normalized distance between the zoom limits, then ease it.
+        _targetDistN = _distanceLimits.InverseLerp(Vector3.Distance(_targetPos, transform.position));
+        if (_zoomSpeedEasing.keys.Length > 0)
+        {
+            _targetDistN = _zoomSpeedEasing.Evaluate(_targetDistN);
+        }
+
+        _desiredDistance += _inputState.zoom * Time.deltaTime * _zoomSpeed.Lerp(_targetDistN);
         _desiredDistance = _distanceLimits.ClampValue(_desiredDistance);
         _currDistance = Mathf.Lerp(_currDistance, _desiredDistance, Time.deltaTime * _zoomDampening);
 
         // calculate position based on the new distance
-        transform.position = _targetPos - (transform.rotation * _forwardDir * _currDistance + _targetOffset);
+        transform.position = _targetPos - (transform.forward * _currDistance) + _targetOffset;
     }
 }

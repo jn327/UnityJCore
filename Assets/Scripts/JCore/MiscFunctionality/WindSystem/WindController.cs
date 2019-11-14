@@ -43,7 +43,7 @@ public class WindController : MonoBehaviour
 	[SerializeField] [EditableHeader(new string[] {"_type", "_scale", "_changeSpeed", "_bEnabled"})]
 	private WindNoiseLayer[] _strengthNoise = default;
 	private float _strVal;
-	[SerializeField] [EditableHeader(new string[] {"name"})]
+	[SerializeField] [EditableHeader(new string[] {"_type", "_scale", "_changeSpeed", "_bEnabled"})]
 	private WindNoiseLayer[] _angleNoise = default;
 	
 	private float _angleVal;
@@ -56,7 +56,7 @@ public class WindController : MonoBehaviour
 	// this obfuscates the otherwise slightly obvious extremes that the wind can be rotated by.
 	private float _angleRatio = 4;
 
-	[SerializeField]
+	[SerializeField] [EditableHeader(new string[] {"particleSystem"})]
 	private List<ParticleLayer> _particlesAffected = default;
 	private ParticleSystem.Particle[] _particles;
 

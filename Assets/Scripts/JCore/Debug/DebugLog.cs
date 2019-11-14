@@ -26,7 +26,7 @@ public class DebugLog : MonoBehaviour
     private List<DebugLogEvent> _logsAddedThisFrame = new List<DebugLogEvent>();
 
     [System.Serializable]
-    public struct DebugLogEvent 
+    public struct DebugLogEvent
     {
         private float _time;
         public float time { get { return _time; } }
@@ -130,7 +130,7 @@ public class DebugLog : MonoBehaviour
         while (_logsAddedThisFrame.Count > 0)
         {
             logEvent = _logsAddedThisFrame[0];
-            
+
             //Read the pixels in the Rect starting at 0,0 and ending at the screen's width and height
             logEvent.screenshot.ReadPixels(new Rect(0, 0, Screen.width, Screen.height), 0, 0);
             logEvent.screenshot.Apply();
@@ -169,7 +169,7 @@ public class DebugLog : MonoBehaviour
         itemRect.y += itemRect.height + _debugUISpacing;
 
         debugOptions.showFPS = GUI.Toggle(itemRect, debugOptions.showFPS, "Show fps");
-        
+
         itemRect.x += itemRect.width + _debugUISpacing;
         debugOptions.showLog = GUI.Toggle(itemRect, debugOptions.showLog, "Show log");
         itemRect.x = screenRect.x;
@@ -181,7 +181,7 @@ public class DebugLog : MonoBehaviour
             GUI.color = _goodBadColorGradient.Evaluate(fpsNormal);
             GUI.Label(itemRect, _currentFPS.ToString() + " FPS");
             itemRect.y += itemRect.height + _debugUISpacing;
-            
+
             Color rectColor;
             int currFPS;
             Rect rect = new Rect(itemRect.x, itemRect.y, _fpsLogSize.x / _fpsLog.Count, 1);
@@ -192,9 +192,9 @@ public class DebugLog : MonoBehaviour
                 rectColor = _goodBadColorGradient.Evaluate(fpsNormal);
 
                 rect.y = itemRect.y + (_fpsLogSize.y * fpsNormal) - (rect.height * 0.5f);
-                
+
                 GUIEx.DrawRect(rect, rectColor);
-                
+
                 rect.x += rect.width;
             }
             itemRect.y += _fpsLogSize.y + _debugUISpacing;
@@ -208,10 +208,7 @@ public class DebugLog : MonoBehaviour
 
             itemRect.x += itemRect.width + _debugUISpacing;
             itemRect.width = 80;
-            if (GUI.Button(itemRect, "Add to log"))
-            {
-                add("Manual click log", Color.green);
-            }
+            
             itemRect.x += itemRect.width + _debugUISpacing;
             itemRect.width = 70;
             if (GUI.Button(itemRect, "Clear log"))
@@ -221,7 +218,7 @@ public class DebugLog : MonoBehaviour
             itemRect.x = screenRect.x;
 
             itemRect.y += itemRect.height + _debugUISpacing;
-            
+
             //scroll view for the log
             Rect rect = new Rect(0, 0, 10, itemRect.height);
             int spacing = 2;
@@ -232,7 +229,7 @@ public class DebugLog : MonoBehaviour
             //only draw the ones that are within the visible scroll area...
             int startIndex = Mathf.Max(Mathf.FloorToInt(_logScrollPosition.x/(rect.width + spacing)), 0);
             int endIndex = Mathf.Min(startIndex + Mathf.CeilToInt(windowRect.width/(rect.width + spacing)) + 1, _logs.Count);
-            
+
             Color backgroundColor = GUI.backgroundColor;
             int hoverIndex = -1;
             for (int i = startIndex; i < endIndex; i++)
@@ -240,7 +237,7 @@ public class DebugLog : MonoBehaviour
                 rect.x = i * (rect.width + spacing);
 
                 GUIEx.DrawRect(rect, _logs[i].color );
-                
+
                 GUI.DrawTexture(rect, _logs[i].screenshot, ScaleMode.ScaleToFit, true);
 
                 if (rect.Contains(m_Event.mousePosition))
@@ -253,7 +250,7 @@ public class DebugLog : MonoBehaviour
             GUI.EndScrollView();
 
             itemRect.y += windowRect.height + _debugUISpacing;
-            
+
             //recent logs
             itemRect.width = 200;
             itemRect.height = 22;
@@ -271,7 +268,7 @@ public class DebugLog : MonoBehaviour
                     j--;
                 }
 
-                itemRect.y += itemRect.height + _debugUISpacing; 
+                itemRect.y += itemRect.height + _debugUISpacing;
             }
             GUI.color = _defaultTextColor;
 

@@ -5,11 +5,6 @@ using UnityEngine;
 [System.Serializable]
 public class WindNoiseLayer
 {
-    [SerializeField, HideInInspector]
-    #pragma warning disable 0414
-    private string name = "";
-    #pragma warning restore 0414
-    
     private enum NOISE_TYPE {SIMPLEX, PERLIN, NONE, RANDOM, X, Y, SINX, SINY, COSX, COSY };
     [SerializeField]
     private NOISE_TYPE _type = NOISE_TYPE.SIMPLEX;
