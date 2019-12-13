@@ -6,7 +6,7 @@
         private set;
     }
 
-    private event System.Action _onComplete;
+    public event System.Action onComplete;
 
     public Timer( float duration )
     {
@@ -29,9 +29,9 @@
         {
             remainingTime = 0;
 
-            if (_onComplete != null)
+            if (onComplete != null)
             {
-                _onComplete.Invoke();
+                onComplete.Invoke();
             }
         }
     }
