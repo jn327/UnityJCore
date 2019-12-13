@@ -63,15 +63,15 @@ public class AnimationCurve3
         
         if (x.keys.Length > 0)
         {
-            t.x = x.Evaluate(t.x);
+            t.x = x.Evaluate(Random.value);
         }
         if (y.keys.Length > 0)
         {
-            t.y = y.Evaluate(t.y);
+            t.y = y.Evaluate(Random.value);
         }
         if (z.keys.Length > 0)
         {
-            t.z = z.Evaluate(t.z);
+            t.z = z.Evaluate(Random.value);
         }
         
         return t;

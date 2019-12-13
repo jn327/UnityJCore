@@ -55,11 +55,11 @@ public class AnimationCurve2
         
         if (x.keys.Length > 0)
         {
-            t.x = x.Evaluate(t.x);
+            t.x = x.Evaluate(Random.value);
         }
         if (y.keys.Length > 0)
         {
-            t.y = y.Evaluate(t.y);
+            t.y = y.Evaluate(Random.value);
         }
         
         return t;
